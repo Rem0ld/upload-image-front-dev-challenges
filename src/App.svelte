@@ -4,22 +4,27 @@
 
   let visible = false;
   let file: string;
+  let error: string;
 
   const postImage = async (event: any) => {
     visible = !visible;
     const formData = new FormData();
     formData.append("file", event.detail.data);
-    const response = await fetch(
-      `${import.meta.env.VITE_DEV_URL}api/images/upload`,
-      {
-        method: "POST",
-        body: formData,
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_DEV_URL}api/images/upload`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+      if (!response.ok) {
+        throw new Error(await response.json());
       }
-    );
-    if (!response.ok) {
-      console.error("Something went wrong");
+      file = await response.json();
+    } catch (error) {
+      error = error.message;
     }
-    file = await response.json();
     visible = !visible;
     return;
   };
@@ -30,7 +35,7 @@
     {#if visible}
       <Loading />
     {:else}
-      <UploadFile {file} on:postImage={postImage} />
+      <UploadFile {file} {error} on:postImage={postImage} />
     {/if}
   </div>
 </main>
